@@ -179,6 +179,8 @@ class ZNotice():
         else:
             errno = ZSendNotice(&notice, ZNOAUTH)
         __error(errno)
+        
+        _ZNotice_c2p(&notice, self)
 
 cdef void _ZNotice_c2p(ZNotice_t * notice, object p_notice):
     p_notice.kind = notice.z_kind
