@@ -210,8 +210,12 @@ class Subscriptions(set):
         errno = ZUnsubscribeTo(delsub, 1, __port)
         __error(errno)
 
-def ReceiveNotice():
+def ReceiveNotice(block=True):
     cdef ZNotice_t notice
+    
+    if not block and ZPending() == 0:
+        return None
+    
     ZReceiveNotice(&notice, NULL)
     
     p_notice = ZNotice()

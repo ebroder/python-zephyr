@@ -68,6 +68,7 @@ cdef extern from "zephyr/zephyr.h":
     int ZOpenPort(unsigned short * port)
     int ZSendNotice(ZNotice_t * notice, int (*cert_routine)())
     int ZReceiveNotice(ZNotice_t *, sockaddr_in *)
+    int ZPending()
     void ZFreeNotice(ZNotice_t * notice)
     int ZSubscribeTo(ZSubscription_t subslist[], int nitems, unsigned short port)
     int ZUnsubscribeTo(ZSubscription_t subslist[], int nitems, unsigned short port)
