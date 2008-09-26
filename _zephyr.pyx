@@ -5,6 +5,11 @@ import time
 cdef extern from "netinet/in.h":
     struct in_addr:
         int s_addr
+    struct sockaddr_in:
+        short sin_family
+        unsigned short sin_port
+        in_addr sin_addr
+        char sin_zero[8]
 
 cdef extern from "arpa/inet.h":
     char * inet_ntoa(in_addr)
@@ -55,6 +60,11 @@ cdef extern from "zephyr/zephyr.h":
         char * z_message
         int z_message_len
     
+    ctypedef struct ZSubscription_t:
+        char * zsub_recipient
+        char * zsub_class
+        char * zsub_classinst
+    
     int (*ZAUTH)()
     int (*ZNOAUTH)()
     
@@ -62,6 +72,9 @@ cdef extern from "zephyr/zephyr.h":
     int ZOpenPort(unsigned short * port)
     int ZSendNotice(ZNotice_t * notice, int (*cert_routine)())
     void ZFreeNotice(ZNotice_t * notice)
+    int ZSubscribeTo(ZSubscription_t subslist[], int nitems, unsigned short port)
+    int ZUnsubscribeTo(ZSubscription_t subslist[], int nitems, unsigned short port)
+    int ZReceiveNotice(ZNotice_t *, sockaddr_in *)
 
 cdef extern from "Python.h":
     object PyString_FromStringAndSize(char *, Py_ssize_t)
@@ -238,3 +251,56 @@ cdef void _ZNotice_p2c(object notice, ZNotice_t * c_notice) except *:
     c_notice.z_message = _string_p2c(encoded_message)
     c_notice.z_message_len = len(encoded_message)
 
+class Subscriptions(set):
+    """
+    The set of <class, instance, recipient> tuples that the current
+    user is subscribed to
+    """
+    def subbed(self, item):
+        if len(item) != 3:
+            raise TypeError, "item is not a zephyr subscription tuple"
+        elif item in self:
+            return True
+        elif ((item[0],) + ('',) + (item[2],)) in self:
+            return True
+        else:
+            return False
+    
+    def add(self, item):
+        cdef ZSubscription_t newsub[1]
+        
+        if len(item) != 3:
+            raise TypeError, "item is not a zephyr subscription tuple"
+        if item in self:
+            return
+        
+        newsub[0].zsub_class = item[0]
+        newsub[0].zsub_classinst = item[1]
+        newsub[0].zsub_recipient = item[2]
+        
+        errno = ZSubscribeTo(newsub, 1, __port)
+        __error(errno)
+        
+        super(Subscriptions, self).add(item)
+    
+    def remove(self, item):
+        cdef ZSubscription_t delsub[1]
+        
+        if len(item) != 3:
+            raise TypeError, "item is not a zephyr subscription tuple"
+        super(Subscriptions, self).remove(item)
+        
+        delsub[0].zsub_class = item[0]
+        delsub[0].zsub_classinst = item[1]
+        delsub[0].zsub_recipient = item[2]
+        
+        errno = ZUnsubscribeTo(delsub, 1, __port)
+        __error(errno)
+
+def ReceiveNotice():
+    cdef ZNotice_t notice
+    ZReceiveNotice(&notice, NULL)
+    
+    p_notice = ZNotice()
+    _ZNotice_c2p(&notice, p_notice)
+    return p_notice
