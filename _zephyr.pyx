@@ -133,12 +133,9 @@ class ZUid():
         self.address = ''
         self.time = 0
 
-cdef object _ZUid_c2p(ZUnique_Id_t * uid):
-    p_uid = ZUid()
+cdef void _ZUid_c2p(ZUnique_Id_t * uid, object p_uid):
     p_uid.address = inet_ntoa(uid.zuid_addr)
     p_uid.time = _ZTimeval_c2p(&uid.tv)
-    
-    return p_uid
 
 cdef void _ZUid_p2c(object uid, ZUnique_Id_t * c_uid) except *:
     inet_aton(uid.address, &c_uid.zuid_addr)
@@ -183,11 +180,9 @@ class ZNotice():
             errno = ZSendNotice(&notice, ZNOAUTH)
         __error(errno)
 
-cdef object _ZNotice_c2p(ZNotice_t * notice):
-    p_notice = ZNotice()
-    
+cdef void _ZNotice_c2p(ZNotice_t * notice, object p_notice):
     p_notice.kind = notice.z_kind
-    p_notice.uid = _ZUid_c2p(&notice.z_uid)
+    _ZUid_c2p(&notice.z_uid, p_notice.uid)
     p_notice.time = _ZTimeval_c2p(&notice.z_time)
     p_notice.port = int(notice.z_port)
     p_notice.auth = bool(notice.z_auth)
@@ -206,8 +201,6 @@ cdef object _ZNotice_c2p(ZNotice_t * notice):
         p_notice.message = None
     else:
         p_notice.message = PyString_FromStringAndSize(notice.z_message, notice.z_message_len).decode('utf-8')
-    
-    return p_notice
 
 cdef void _ZNotice_p2c(object notice, ZNotice_t * c_notice) except *:
     memset(c_notice, 0, sizeof(ZNotice_t))
