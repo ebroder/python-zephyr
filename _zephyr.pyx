@@ -151,7 +151,7 @@ class ZNotice():
                  'fields',
                  'message')
     
-    def __init__(self):
+    def __init__(self, **options):
         self.kind = ACKED
         self.cls = 'message'
         self.instance = 'personal'
@@ -166,6 +166,9 @@ class ZNotice():
         self.format = None
         self.fields = []
         self.message = None
+        
+        for k, v in options.iteritems():
+            setattr(self, k, v)
     
     def send(self):
         cdef ZNotice_t notice
