@@ -1,3 +1,6 @@
+import os
+import pwd
+
 cdef extern from "netinet/in.h":
     struct in_addr:
         int s_addr
@@ -81,15 +84,18 @@ cdef __openPort(unsigned short * port):
 def port():
     return __port
 
-def zwrite(cls, instance, recipient, message, **options):
+def zwrite(recipient='', message='', cls='message', instance='personal', opcode='', sender=None, auth=True, zsig=None, **options):
     cdef ZNotice_t notice
     memset(&notice, 0, sizeof(ZNotice_t))
     
-    if 'zsig' in options:
+    if zsig is not None:
         sig = options['zsig']
     else:
-        sig = ''
+        sig = pwd.getpwuid(os.getuid()).pw_gecos.split(',')[0]
     full_message = '%s\0%s' % (sig, message)
+    
+    if sender is not None:
+        notice.z_sender = sender
     
     notice.z_kind = 2
     notice.z_class = cls
@@ -97,13 +103,9 @@ def zwrite(cls, instance, recipient, message, **options):
     notice.z_recipient = recipient
     notice.z_message = full_message
     notice.z_message_len = len(full_message)
+    notice.z_opcode = opcode
     
-    if 'opcode' in options:
-        notice.z_opcode = options['opcode']
-    if 'sender' in options:
-        notice.z_sender = options['sender']
-    
-    if options.get('auth', False):
+    if auth:
         errno = ZSendNotice(&notice, ZAUTH)
     else:
         errno = ZSendNotice(&notice, ZNOAUTH)
