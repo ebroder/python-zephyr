@@ -61,6 +61,7 @@ cdef extern from "zephyr/zephyr.h":
     int ZInitialize()
     int ZOpenPort(unsigned short * port)
     int ZSendNotice(ZNotice_t * notice, int (*cert_routine)())
+    void ZFreeNotice(ZNotice_t * notice)
 
 cdef extern from "Python.h":
     object PyString_FromStringAndSize(char *, Py_ssize_t)
@@ -70,6 +71,7 @@ cdef extern from "com_err.h":
 
 cdef extern from "stdlib.h":
     void * malloc(unsigned int)
+    void free(void *)
 
 cdef extern from "string.h":
     void * memset(void *, int, unsigned int)
@@ -101,13 +103,13 @@ cdef __openPort(unsigned short * port):
 
 ### END autoinitialization
 
-cdef object _string_c2p(char * string):
+cdef void _string_c2p(char * string, object p_string) except *:
     if string is NULL:
-        return None
+        p_string = None
     else:
-        return str(string)
+        p_string = str(string)
 
-cdef char * _string_p2c(object string):
+cdef char * _string_p2c(object string) except *:
     if string is None:
         return NULL
     else:
@@ -174,6 +176,8 @@ class ZNotice():
         cdef ZNotice_t notice
         _ZNotice_p2c(self, &notice)
         
+        original_message = self.message
+        
         if self.auth:
             errno = ZSendNotice(&notice, ZAUTH)
         else:
@@ -181,20 +185,24 @@ class ZNotice():
         __error(errno)
         
         _ZNotice_c2p(&notice, self)
+        
+        self.message = original_message
+        
+        ZFreeNotice(&notice)
 
-cdef void _ZNotice_c2p(ZNotice_t * notice, object p_notice):
+cdef void _ZNotice_c2p(ZNotice_t * notice, object p_notice) except *:
     p_notice.kind = notice.z_kind
     _ZUid_c2p(&notice.z_uid, p_notice.uid)
     p_notice.time = _ZTimeval_c2p(&notice.z_time)
     p_notice.port = int(notice.z_port)
     p_notice.auth = bool(notice.z_auth)
     
-    p_notice.cls = _string_c2p(notice.z_class)
-    p_notice.instance = _string_c2p(notice.z_class_inst)
-    p_notice.recipient = _string_c2p(notice.z_recipient)
-    p_notice.sender = _string_c2p(notice.z_sender)
-    p_notice.opcode = _string_c2p(notice.z_opcode)
-    p_notice.format = _string_c2p(notice.z_default_format)
+    _string_c2p(notice.z_class, p_notice.cls)
+    _string_c2p(notice.z_class_inst, p_notice.instance)
+    _string_c2p(notice.z_recipient, p_notice.recipient)
+    _string_c2p(notice.z_sender, p_notice.sender)
+    _string_c2p(notice.z_opcode, p_notice.opcode)
+    _string_c2p(notice.z_default_format, p_notice.format)
     p_notice.fields = list()
     for i in range(notice.z_num_other_fields):
         p_notice.fields.append(notice.z_other_fields[i])
