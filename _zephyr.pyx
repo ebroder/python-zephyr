@@ -23,8 +23,8 @@ cdef extern from "zephyr/zephyr.h":
         STAT
     
     struct _ZTimeval:
-        int tv_sec
-        int tv_usec
+        unsigned int tv_sec
+        unsigned int tv_usec
     
     ctypedef struct ZUnique_Id_t:
         in_addr zuid_addr
