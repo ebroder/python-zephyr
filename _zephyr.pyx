@@ -62,6 +62,9 @@ cdef extern from "zephyr/zephyr.h":
     int ZOpenPort(unsigned short * port)
     int ZSendNotice(ZNotice_t * notice, int (*cert_routine)())
 
+cdef extern from "Python.h":
+    object PyString_FromStringAndSize(char *, Py_ssize_t)
+
 cdef extern from "com_err.h":
     char * error_message(int)
 
@@ -199,7 +202,10 @@ cdef object _ZNotice_c2p(ZNotice_t * notice):
     for i in range(notice.z_num_other_fields):
         p_notice.fields.append(notice.z_other_fields[i])
     
-    p_notice.message = _string_c2p(notice.z_message)
+    if notice.z_message is NULL:
+        p_notice.message = None
+    else:
+        p_notice.message = PyString_FromStringAndSize(notice.z_message, notice.z_message_len)
     
     return p_notice
 
