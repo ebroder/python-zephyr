@@ -23,6 +23,11 @@ cdef extern from "zephyr/zephyr.h":
         CLIENTACK,
         STAT
     
+    enum _ZAuth_Levels:
+        ZAUTH_FAILED,
+        ZAUTH_YES,
+        ZAUTH_NO
+    
     struct _ZTimeval:
         unsigned int tv_sec
         unsigned int tv_usec
@@ -69,6 +74,7 @@ cdef extern from "zephyr/zephyr.h":
     int ZSendNotice(ZNotice_t * notice, int (*cert_routine)())
     int ZReceiveNotice(ZNotice_t *, sockaddr_in *)
     int ZPending()
+    int ZCheckAuthentication(ZNotice_t *, sockaddr_in *)
     void ZFreeNotice(ZNotice_t * notice)
     int ZSubscribeTo(ZSubscription_t subslist[], int nitems, unsigned short port)
     int ZUnsubscribeTo(ZSubscription_t subslist[], int nitems, unsigned short port)

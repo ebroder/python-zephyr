@@ -212,11 +212,17 @@ class Subscriptions(set):
 
 def ReceiveNotice(block=True):
     cdef ZNotice_t notice
+    cdef sockaddr_in sender
     
     if not block and ZPending() == 0:
         return None
     
-    ZReceiveNotice(&notice, NULL)
+    ZReceiveNotice(&notice, &sender)
+    
+    if ZCheckAuthentication(&notice, &sender) == ZAUTH_YES:
+        notice.z_auth = 1
+    else:
+        notice.z_auth = 0
     
     p_notice = ZNotice()
     _ZNotice_c2p(&notice, p_notice)
