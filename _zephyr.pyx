@@ -51,7 +51,7 @@ cdef void _ZTimeval_p2c(float timeval, _ZTimeval * c_timeval) except *:
     c_timeval.tv_sec = int(timeval)
     c_timeval.tv_usec = int((timeval - c_timeval.tv_sec) * 100000)
 
-class ZUid():
+class ZUid(object):
     """
     A per-transaction unique ID for zephyrs
     """
@@ -69,7 +69,7 @@ cdef void _ZUid_p2c(object uid, ZUnique_Id_t * c_uid) except *:
     inet_aton(uid.address, &c_uid.zuid_addr)
     _ZTimeval_p2c(uid.time, &c_uid.tv)
 
-class ZNotice():
+class ZNotice(object):
     """
     A zephyr message
     """
