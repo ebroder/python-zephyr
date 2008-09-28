@@ -1,0 +1,5 @@
+_zephyr.c
+*.so
+build
+dist
+*.pyc
