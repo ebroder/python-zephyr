@@ -71,6 +71,8 @@ cdef extern from "zephyr/zephyr.h":
     
     int ZInitialize()
     int ZOpenPort(unsigned short * port)
+    int ZGetFD()
+    int ZSetFD(int)
     int ZSendNotice(ZNotice_t * notice, int (*cert_routine)())
     int ZReceiveNotice(ZNotice_t *, sockaddr_in *)
     int ZPending()
@@ -78,6 +80,9 @@ cdef extern from "zephyr/zephyr.h":
     void ZFreeNotice(ZNotice_t * notice)
     int ZSubscribeTo(ZSubscription_t subslist[], int nitems, unsigned short port)
     int ZUnsubscribeTo(ZSubscription_t subslist[], int nitems, unsigned short port)
+    int ZCancelSubscriptions(unsigned short port)
+    char * ZGetSender()
+    char * ZGetRealm()
 
 cdef extern from "Python.h":
     object PyString_FromStringAndSize(char *, Py_ssize_t)

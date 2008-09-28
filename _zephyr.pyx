@@ -2,38 +2,15 @@ import os
 import pwd
 import time
 
-### BEGIN autoinitialization
-
-cdef unsigned short __port
-__port = 0
-
-cdef class __Manager:
-    def __init__(self):
-        __initialize()
-        __openPort(&__port)
-
-cdef object __cm
-__cm = __Manager()
-
 def __error(errno):
     if errno != 0:
         raise IOError(errno, error_message(errno))
 
-cdef __initialize():
-    errno = ZInitialize()
-    __error(errno)
-
-cdef __openPort(unsigned short * port):
-    errno = ZOpenPort(port)
-    __error(errno)
-
-### END autoinitialization
-
-cdef void _string_c2p(char * string, object p_string) except *:
+cdef object _string_c2p(char * string):
     if string is NULL:
-        p_string = None
+        return None
     else:
-        p_string = str(string)
+        return string
 
 cdef char * _string_p2c(object string) except *:
     if string is None:
@@ -123,12 +100,12 @@ cdef void _ZNotice_c2p(ZNotice_t * notice, object p_notice) except *:
     p_notice.port = int(notice.z_port)
     p_notice.auth = bool(notice.z_auth)
     
-    _string_c2p(notice.z_class, p_notice.cls)
-    _string_c2p(notice.z_class_inst, p_notice.instance)
-    _string_c2p(notice.z_recipient, p_notice.recipient)
-    _string_c2p(notice.z_sender, p_notice.sender)
-    _string_c2p(notice.z_opcode, p_notice.opcode)
-    _string_c2p(notice.z_default_format, p_notice.format)
+    p_notice.cls = _string_c2p(notice.z_class)
+    p_notice.instance = _string_c2p(notice.z_class_inst)
+    p_notice.recipient = _string_c2p(notice.z_recipient)
+    p_notice.sender = _string_c2p(notice.z_sender)
+    p_notice.opcode = _string_c2p(notice.z_opcode)
+    p_notice.format = _string_c2p(notice.z_default_format)
     p_notice.fields = list()
     for i in range(notice.z_num_other_fields):
         p_notice.fields.append(notice.z_other_fields[i])
@@ -164,53 +141,52 @@ cdef void _ZNotice_p2c(object notice, ZNotice_t * c_notice) except *:
     c_notice.z_message = _string_p2c(encoded_message)
     c_notice.z_message_len = len(encoded_message)
 
-class Subscriptions(set):
-    """
-    The set of <class, instance, recipient> tuples that the current
-    user is subscribed to
-    """
-    def subbed(self, item):
-        if len(item) != 3:
-            raise TypeError, "item is not a zephyr subscription tuple"
-        elif item in self:
-            return True
-        elif ((item[0],) + ('',) + (item[2],)) in self:
-            return True
-        else:
-            return False
-    
-    def add(self, item):
-        cdef ZSubscription_t newsub[1]
-        
-        if len(item) != 3:
-            raise TypeError, "item is not a zephyr subscription tuple"
-        if item in self:
-            return
-        
-        newsub[0].zsub_class = item[0]
-        newsub[0].zsub_classinst = item[1]
-        newsub[0].zsub_recipient = item[2]
-        
-        errno = ZSubscribeTo(newsub, 1, __port)
-        __error(errno)
-        
-        super(Subscriptions, self).add(item)
-    
-    def remove(self, item):
-        cdef ZSubscription_t delsub[1]
-        
-        if len(item) != 3:
-            raise TypeError, "item is not a zephyr subscription tuple"
-        super(Subscriptions, self).remove(item)
-        
-        delsub[0].zsub_class = item[0]
-        delsub[0].zsub_classinst = item[1]
-        delsub[0].zsub_recipient = item[2]
-        
-        errno = ZUnsubscribeTo(delsub, 1, __port)
-        __error(errno)
+def initialize():
+    errno = ZInitialize()
+    __error(errno)
 
-def ReceiveNotice(block=True):
+def openPort():
+    cdef unsigned short port
+    
+    port = 0
+    
+    errno = ZOpenPort(&port)
+    __error(errno)
+    
+    return port
+
+def getFD():
+    return ZGetFD()
+
+def setFD(fd):
+    errno = ZSetFD(fd)
+    __error(errno)
+
+def sub(cls, instance, recipient):
+    cdef ZSubscription_t newsub[1]
+    
+    newsub[0].zsub_class = cls
+    newsub[0].zsub_classinst = instance
+    newsub[0].zsub_recipient = recipient
+    
+    errno = ZSubscribeTo(newsub, 1, 0)
+    __error(errno)
+
+def unsub(cls, instance, recipient):
+    cdef ZSubscription_t delsub[1]
+    
+    delsub[0].zsub_class = cls
+    delsub[0].zsub_classinst = instance
+    delsub[0].zsub_recipient = recipient
+    
+    errno = ZUnsubscribeTo(delsub, 1, 0)
+    __error(errno)
+
+def cancelSubs():
+    errno = ZCancelSubscriptions(0)
+    __error(errno)
+
+def receive(block=False):
     cdef ZNotice_t notice
     cdef sockaddr_in sender
     
@@ -227,3 +203,9 @@ def ReceiveNotice(block=True):
     p_notice = ZNotice()
     _ZNotice_c2p(&notice, p_notice)
     return p_notice
+
+def sender():
+    return ZGetSender()
+
+def realm():
+    return ZGetRealm()
