@@ -34,8 +34,6 @@ class Subscriptions(set):
             raise TypeError, 'item is not a zephyr subscription tuple'
         
         item = list(item)
-        if item[1] == '*':
-            item[1] = ''
         if item[2].startswith('*'):
             item[2] = item[2][1:]
         
