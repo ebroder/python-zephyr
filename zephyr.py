@@ -62,4 +62,4 @@ class Subscriptions(set):
         
         _z.unsub(*item)
         
-        super(Subscriptions.self).remove(item)
+        super(Subscriptions, self).remove(item)
