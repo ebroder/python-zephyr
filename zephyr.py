@@ -40,7 +40,7 @@ class Subscriptions(set):
             item[2] = item[2][1:]
         
         if '@' not in item[2]:
-            item[2] += _z.realm()
+            item[2] += '@%s' % _z.realm()
         
         return tuple(item)
     
