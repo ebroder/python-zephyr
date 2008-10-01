@@ -193,7 +193,8 @@ def receive(block=False):
     if not block and ZPending() == 0:
         return None
     
-    ZReceiveNotice(&notice, &sender)
+    errno = ZReceiveNotice(&notice, &sender)
+    __error(errno)
     
     if ZCheckAuthentication(&notice, &sender) == ZAUTH_YES:
         notice.z_auth = 1
