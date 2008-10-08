@@ -1,6 +1,8 @@
 import _zephyr as _z
 import os
 
+from _zephyr import receive, ZNotice
+
 __inited = False
 
 def init():
