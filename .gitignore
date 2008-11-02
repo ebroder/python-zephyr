@@ -3,3 +3,4 @@ _zephyr.c
 build
 dist
 *.pyc
+PyZephyr.egg-info
