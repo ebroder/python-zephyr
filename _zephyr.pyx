@@ -32,7 +32,6 @@ class ZUid(object):
     """
     A per-transaction unique ID for zephyrs
     """
-    __slots__ = ('address', 'time')
     
     def __init__(self):
         self.address = ''
@@ -50,11 +49,6 @@ class ZNotice(object):
     """
     A zephyr message
     """
-    __slots__ = ('kind', 'uid', 'time', 'port', 'auth',
-                 'cls', 'instance', 'recipient',
-                 'sender', 'opcode', 'format',
-                 'fields',
-                 'message')
     
     def __init__(self, **options):
         self.kind = ACKED
