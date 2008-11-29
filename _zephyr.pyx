@@ -64,10 +64,18 @@ class ZNotice(object):
         self.opcode = None
         self.format = "Class $class, Instance $instance:\nTo: @bold($recipient) at $time $date\nFrom: @bold{$1 <$sender>}\n\n$2"
         self.other_fields = []
-        self.message = None
+        self.fields = []
         
         for k, v in options.iteritems():
             setattr(self, k, v)
+    
+    def getmessage(self):
+        return '\0'.join(self.fields)
+    
+    def setmessage(self, newmsg):
+        self.fields = newmsg.split('\0')
+    
+    message = property(getmessage, setmessage)
     
     def send(self):
         cdef ZNotice_t notice
