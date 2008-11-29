@@ -63,7 +63,7 @@ class ZNotice(object):
         self.sender = None
         self.opcode = None
         self.format = "Class $class, Instance $instance:\nTo: @bold($recipient) at $time $date\nFrom: @bold{$1 <$sender>}\n\n$2"
-        self.fields = []
+        self.other_fields = []
         self.message = None
         
         for k, v in options.iteritems():
@@ -100,9 +100,9 @@ cdef void _ZNotice_c2p(ZNotice_t * notice, object p_notice) except *:
     p_notice.sender = _string_c2p(notice.z_sender)
     p_notice.opcode = _string_c2p(notice.z_opcode)
     p_notice.format = _string_c2p(notice.z_default_format)
-    p_notice.fields = list()
+    p_notice.other_fields = list()
     for i in range(notice.z_num_other_fields):
-        p_notice.fields.append(notice.z_other_fields[i])
+        p_notice.other_fields.append(notice.z_other_fields[i])
     
     if notice.z_message is NULL:
         p_notice.message = None
@@ -126,9 +126,9 @@ cdef void _ZNotice_p2c(object notice, ZNotice_t * c_notice) except *:
     c_notice.z_sender = _string_p2c(notice.sender)
     c_notice.z_opcode = _string_p2c(notice.opcode)
     c_notice.z_default_format = _string_p2c(notice.format)
-    c_notice.z_num_other_fields = len(notice.fields)
+    c_notice.z_num_other_fields = len(notice.other_fields)
     for i in range(c_notice.z_num_other_fields):
-        c_notice.z_other_fields[i] = _string_p2c(notice.fields[i])
+        c_notice.z_other_fields[i] = _string_p2c(notice.other_fields[i])
     
     encoded_message = notice.message.encode('utf-8')
     
