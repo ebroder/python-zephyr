@@ -18,16 +18,6 @@ cdef char * _string_p2c(object string) except *:
     else:
         return string
 
-# Timevals can just be floats; they're not intereting enough to have
-# their own class
-
-cdef object _timeval_c2p(timeval * timeval):
-    return timeval.tv_sec + (timeval.tv_usec / 100000.0)
-
-cdef void _timeval_p2c(float timeval, timeval * c_timeval) except *:
-    c_timeval.tv_sec = int(timeval)
-    c_timeval.tv_usec = int((timeval - c_timeval.tv_sec) * 100000)
-
 class ZUid(object):
     """
     A per-transaction unique ID for zephyrs
@@ -39,11 +29,12 @@ class ZUid(object):
 
 cdef void _ZUid_c2p(ZUnique_Id_t * uid, object p_uid):
     p_uid.address = inet_ntoa(uid.zuid_addr)
-    p_uid.time = _timeval_c2p(&uid.tv)
+    p_uid.time = uid.tv.tv_sec + (uid.tv.tv_usec / 100000.0)
 
 cdef void _ZUid_p2c(object uid, ZUnique_Id_t * c_uid) except *:
     inet_aton(uid.address, &c_uid.zuid_addr)
-    _timeval_p2c(uid.time, &c_uid.tv)
+    c_uid.tv.tv_usec = int(uid.time)
+    c_uid.tv.tv_usec = int((uid.time - c_uid.tv.tv_usec) * 100000)
 
 class ZNotice(object):
     """
@@ -98,7 +89,7 @@ class ZNotice(object):
 cdef void _ZNotice_c2p(ZNotice_t * notice, object p_notice) except *:
     p_notice.kind = notice.z_kind
     _ZUid_c2p(&notice.z_uid, p_notice.uid)
-    p_notice.time = _timeval_c2p(&notice.z_time)
+    p_notice.time = notice.z_time.tv_sec + (notice.z_time.tv_usec / 100000.0)
     p_notice.port = int(notice.z_port)
     p_notice.auth = bool(notice.z_auth)
     
@@ -123,7 +114,8 @@ cdef void _ZNotice_p2c(object notice, ZNotice_t * c_notice) except *:
     c_notice.z_kind = notice.kind
     _ZUid_p2c(notice.uid, &c_notice.z_uid)
     if notice.time != 0:
-        _timeval_p2c(notice.time, &c_notice.z_time)
+        c_notice.z_time.tv_sec = int(notice.time)
+        c_notice.z_time.tv_usec = int((notice.time - c_notice.z_time.tv_sec) * 100000)
     if notice.port != 0:
         c_notice.z_port = notice.port
     c_notice.z_auth = int(notice.auth)
