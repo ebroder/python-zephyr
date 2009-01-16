@@ -1,0 +1,15 @@
+Source: python-zephyr
+Section: python
+Priority: optional
+Build-Depends: debhelper, python-all-dev, python-central, python, python-pyrex, libzephyr-dev
+Maintainer: Karl Ramm <kcr@1ts.org>
+Standards-Version: 3.7.3
+XS-Python-Version: all
+
+Package: python-zephyr
+Architecture: any
+Depends: ${python:Depends}, ${shlibs:Depends}
+Provides: ${python:Provides}
+XB-Python-Version: ${python:Versions}
+Description: Python access to zephyr library
+ Get at the zephyr library from python.  Woo.	    

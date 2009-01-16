@@ -1,0 +1,46 @@
+#!/usr/bin/make -f
+
+PYVERS=$(shell pyversions -r debian/control)
+
+configure:
+
+build: build-stamp
+
+build-stamp:
+	dh_testdir
+	for python in $(PYVERS); do $$python setup.py build; done
+	touch build-stamp
+
+clean:
+	dh_testdir
+	dh_testroot
+	rm -rf build-stamp
+	for python in $(PYVERS); do $$python setup.py clean; done
+	dh_clean
+
+install-arch: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	for python in $(PYVERS); do $$python setup.py install --root=$(CURDIR)/debian/python-zephyr --no-compile; done
+
+install-indep:
+
+binary-indep:
+
+binary-arch: build install-arch
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs -a
+	dh_strip -a
+	dh_pycentral -a
+	dh_python -a
+	dh_installdeb -a
+	dh_shlibdeps -a
+	dh_gencontrol -a
+	dh_md5sums -a
+	dh_builddeb -a
+
+binary: binary-indep binary-arch
+
+.PHONY: build clean binary-indep binary-arch binary install configure
