@@ -130,10 +130,10 @@ cdef void _ZNotice_p2c(object notice, ZNotice_t * c_notice) except *:
     for i in range(c_notice.z_num_other_fields):
         c_notice.z_other_fields[i] = _string_p2c(notice.other_fields[i])
     
-    encoded_message = notice.message.encode('utf-8')
+    notice.encoded_message = notice.message.encode('utf-8')
     
-    c_notice.z_message = _string_p2c(encoded_message)
-    c_notice.z_message_len = len(encoded_message)
+    c_notice.z_message = _string_p2c(notice.encoded_message)
+    c_notice.z_message_len = len(notice.encoded_message)
 
 def initialize():
     errno = ZInitialize()
