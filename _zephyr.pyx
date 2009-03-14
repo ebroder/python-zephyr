@@ -1,6 +1,7 @@
 import os
 import pwd
 import time
+import select
 
 def __error(errno):
     if errno != 0:
@@ -184,8 +185,11 @@ def receive(block=False):
     cdef ZNotice_t notice
     cdef sockaddr_in sender
     
-    if not block and ZPending() == 0:
-        return None
+    if not block:
+        if ZPending() == 0:
+            return None
+    else:
+        select.select([getFD()], [], [])
     
     errno = ZReceiveNotice(&notice, &sender)
     __error(errno)
