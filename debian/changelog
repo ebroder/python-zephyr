@@ -1,3 +1,9 @@
+python-zephyr (0.2.0-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Evan Broder <broder@mit.edu>  Sat, 16 May 2009 14:21:32 -0400
+
 python-zephyr (0.1.0-1) unstable; urgency=low
 
   * Initial upload.
