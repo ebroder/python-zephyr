@@ -15,7 +15,7 @@ clean:
 	dh_testdir
 	dh_testroot
 	rm -rf build-stamp
-	for python in $(PYVERS); do $$python setup.py clean; done
+	for python in $(PYVERS); do $$python setup.py clean -a; done
 	dh_clean
 
 install-arch: build
