@@ -6,7 +6,7 @@ from Pyrex.Distutils import build_ext
 
 setup(
     name="PyZephyr",
-    version="0.1.0",
+    version="0.2.0",
     description="PyZephyr - Python bindings for the Zephyr messaging library",
     author="Evan Broder",
     author_email="broder@mit.edu",

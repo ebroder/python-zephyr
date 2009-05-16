@@ -1,6 +1,7 @@
 import os
 import pwd
 import time
+import select
 
 def __error(errno):
     if errno != 0:
@@ -18,21 +19,10 @@ cdef char * _string_p2c(object string) except *:
     else:
         return string
 
-# Timevals can just be floats; they're not intereting enough to have
-# their own class
-
-cdef object _ZTimeval_c2p(_ZTimeval * timeval):
-    return timeval.tv_sec + (timeval.tv_usec / 100000.0)
-
-cdef void _ZTimeval_p2c(float timeval, _ZTimeval * c_timeval) except *:
-    c_timeval.tv_sec = int(timeval)
-    c_timeval.tv_usec = int((timeval - c_timeval.tv_sec) * 100000)
-
 class ZUid(object):
     """
     A per-transaction unique ID for zephyrs
     """
-    __slots__ = ('address', 'time')
     
     def __init__(self):
         self.address = ''
@@ -40,21 +30,17 @@ class ZUid(object):
 
 cdef void _ZUid_c2p(ZUnique_Id_t * uid, object p_uid):
     p_uid.address = inet_ntoa(uid.zuid_addr)
-    p_uid.time = _ZTimeval_c2p(&uid.tv)
+    p_uid.time = uid.tv.tv_sec + (uid.tv.tv_usec / 100000.0)
 
 cdef void _ZUid_p2c(object uid, ZUnique_Id_t * c_uid) except *:
     inet_aton(uid.address, &c_uid.zuid_addr)
-    _ZTimeval_p2c(uid.time, &c_uid.tv)
+    c_uid.tv.tv_usec = int(uid.time)
+    c_uid.tv.tv_usec = int((uid.time - c_uid.tv.tv_usec) * 100000)
 
 class ZNotice(object):
     """
     A zephyr message
     """
-    __slots__ = ('kind', 'uid', 'time', 'port', 'auth',
-                 'cls', 'instance', 'recipient',
-                 'sender', 'opcode', 'format',
-                 'fields',
-                 'message')
     
     def __init__(self, **options):
         self.kind = ACKED
@@ -69,11 +55,19 @@ class ZNotice(object):
         self.sender = None
         self.opcode = None
         self.format = "Class $class, Instance $instance:\nTo: @bold($recipient) at $time $date\nFrom: @bold{$1 <$sender>}\n\n$2"
+        self.other_fields = []
         self.fields = []
-        self.message = None
         
         for k, v in options.iteritems():
             setattr(self, k, v)
+    
+    def getmessage(self):
+        return '\0'.join(self.fields)
+    
+    def setmessage(self, newmsg):
+        self.fields = newmsg.split('\0')
+    
+    message = property(getmessage, setmessage)
     
     def send(self):
         cdef ZNotice_t notice
@@ -96,7 +90,7 @@ class ZNotice(object):
 cdef void _ZNotice_c2p(ZNotice_t * notice, object p_notice) except *:
     p_notice.kind = notice.z_kind
     _ZUid_c2p(&notice.z_uid, p_notice.uid)
-    p_notice.time = _ZTimeval_c2p(&notice.z_time)
+    p_notice.time = notice.z_time.tv_sec + (notice.z_time.tv_usec / 100000.0)
     p_notice.port = int(notice.z_port)
     p_notice.auth = bool(notice.z_auth)
     
@@ -106,9 +100,9 @@ cdef void _ZNotice_c2p(ZNotice_t * notice, object p_notice) except *:
     p_notice.sender = _string_c2p(notice.z_sender)
     p_notice.opcode = _string_c2p(notice.z_opcode)
     p_notice.format = _string_c2p(notice.z_default_format)
-    p_notice.fields = list()
+    p_notice.other_fields = list()
     for i in range(notice.z_num_other_fields):
-        p_notice.fields.append(notice.z_other_fields[i])
+        p_notice.other_fields.append(notice.z_other_fields[i])
     
     if notice.z_message is NULL:
         p_notice.message = None
@@ -121,7 +115,8 @@ cdef void _ZNotice_p2c(object notice, ZNotice_t * c_notice) except *:
     c_notice.z_kind = notice.kind
     _ZUid_p2c(notice.uid, &c_notice.z_uid)
     if notice.time != 0:
-        _ZTimeval_p2c(notice.time, &c_notice.z_time)
+        c_notice.z_time.tv_sec = int(notice.time)
+        c_notice.z_time.tv_usec = int((notice.time - c_notice.z_time.tv_sec) * 100000)
     if notice.port != 0:
         c_notice.z_port = notice.port
     c_notice.z_auth = int(notice.auth)
@@ -132,14 +127,14 @@ cdef void _ZNotice_p2c(object notice, ZNotice_t * c_notice) except *:
     c_notice.z_sender = _string_p2c(notice.sender)
     c_notice.z_opcode = _string_p2c(notice.opcode)
     c_notice.z_default_format = _string_p2c(notice.format)
-    c_notice.z_num_other_fields = len(notice.fields)
+    c_notice.z_num_other_fields = len(notice.other_fields)
     for i in range(c_notice.z_num_other_fields):
-        c_notice.z_other_fields[i] = _string_p2c(notice.fields[i])
+        c_notice.z_other_fields[i] = _string_p2c(notice.other_fields[i])
     
-    encoded_message = notice.message.encode('utf-8')
+    notice.encoded_message = notice.message.encode('utf-8')
     
-    c_notice.z_message = _string_p2c(encoded_message)
-    c_notice.z_message_len = len(encoded_message)
+    c_notice.z_message = _string_p2c(notice.encoded_message)
+    c_notice.z_message_len = len(notice.encoded_message)
 
 def initialize():
     errno = ZInitialize()
@@ -189,10 +184,12 @@ def cancelSubs():
 def receive(block=False):
     cdef ZNotice_t notice
     cdef sockaddr_in sender
-    
-    if not block and ZPending() == 0:
-        return None
-    
+
+    while ZPending() == 0:
+        if not block:
+            return None
+        select.select([getFD()], [], [])
+
     errno = ZReceiveNotice(&notice, &sender)
     __error(errno)
     

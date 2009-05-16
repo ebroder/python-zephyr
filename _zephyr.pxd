@@ -11,6 +11,11 @@ cdef extern from "arpa/inet.h":
     char * inet_ntoa(in_addr)
     int inet_aton(char *, in_addr *)
 
+cdef extern from "sys/time.h":
+     struct timeval:
+         unsigned int tv_sec
+         unsigned int tv_usec
+
 cdef extern from "zephyr/zephyr.h":
     ctypedef enum ZNotice_Kind_t:
         UNSAFE,
@@ -28,20 +33,16 @@ cdef extern from "zephyr/zephyr.h":
         ZAUTH_YES,
         ZAUTH_NO
     
-    struct _ZTimeval:
-        unsigned int tv_sec
-        unsigned int tv_usec
-    
     ctypedef struct ZUnique_Id_t:
         in_addr zuid_addr
-        _ZTimeval tv
+        timeval tv
     
     ctypedef struct ZNotice_t:
         char * z_packet
         char * z_version
         ZNotice_Kind_t z_kind
         ZUnique_Id_t z_uid
-        _ZTimeval z_time
+        timeval z_time
         unsigned short z_port
         int z_auth
         int z_checked_auth
