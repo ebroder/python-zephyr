@@ -12,4 +12,4 @@ Depends: ${python:Depends}, ${shlibs:Depends}
 Provides: ${python:Provides}
 XB-Python-Version: ${python:Versions}
 Description: Python access to zephyr library
- Get at the zephyr library from python.  Woo.	    
+ Get at the zephyr library from Python.  Woo.
