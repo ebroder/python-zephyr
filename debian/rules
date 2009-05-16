@@ -32,9 +32,11 @@ binary-arch: build install-arch
 	dh_testdir
 	dh_testroot
 	dh_installchangelogs -a
+	dh_installdocs -a
 	dh_strip -a
 	dh_pycentral -a
 	dh_python -a
+	dh_compress -a
 	dh_installdeb -a
 	dh_shlibdeps -a
 	dh_gencontrol -a
