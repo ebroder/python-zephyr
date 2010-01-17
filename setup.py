@@ -17,7 +17,7 @@ setup(
     ext_modules=[
         Extension("_zephyr",
                   ["_zephyr.pyx"],
-                  libraries=["zephyr", "krb4"])
+                  libraries=["zephyr"])
         ],
     cmdclass= {"build_ext": build_ext}
 )
