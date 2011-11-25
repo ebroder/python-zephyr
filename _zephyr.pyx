@@ -107,7 +107,7 @@ cdef void _ZNotice_c2p(ZNotice_t * notice, object p_notice) except *:
     if notice.z_message is NULL:
         p_notice.message = None
     else:
-        p_notice.message = PyString_FromStringAndSize(notice.z_message, notice.z_message_len).decode('utf-8')
+        p_notice.message = PyString_FromStringAndSize(notice.z_message, notice.z_message_len)
 
 cdef void _ZNotice_p2c(object notice, ZNotice_t * c_notice) except *:
     memset(c_notice, 0, sizeof(ZNotice_t))
@@ -131,7 +131,10 @@ cdef void _ZNotice_p2c(object notice, ZNotice_t * c_notice) except *:
     for i in range(c_notice.z_num_other_fields):
         c_notice.z_other_fields[i] = _string_p2c(notice.other_fields[i])
     
-    notice.encoded_message = notice.message.encode('utf-8')
+    if isinstance(notice.message, unicode):
+        notice.encoded_message = notice.message.encode('utf-8')
+    else:
+        notice.encoded_message = notice.message
     
     c_notice.z_message = _string_p2c(notice.encoded_message)
     c_notice.z_message_len = len(notice.encoded_message)
