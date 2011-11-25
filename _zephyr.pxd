@@ -93,6 +93,7 @@ cdef extern from "com_err.h":
 
 cdef extern from "stdlib.h":
     void * malloc(unsigned int)
+    void * calloc(unsigned int, unsigned int)
     void free(void *)
 
 cdef extern from "string.h":
