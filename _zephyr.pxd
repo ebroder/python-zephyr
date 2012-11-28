@@ -27,16 +27,16 @@ cdef extern from "zephyr/zephyr.h":
         SERVNAK,
         CLIENTACK,
         STAT
-    
+
     enum _ZAuth_Levels:
         ZAUTH_FAILED,
         ZAUTH_YES,
         ZAUTH_NO
-    
+
     ctypedef struct ZUnique_Id_t:
         in_addr zuid_addr
         timeval tv
-    
+
     ctypedef struct ZNotice_t:
         char * z_packet
         char * z_version
@@ -61,15 +61,15 @@ cdef extern from "zephyr/zephyr.h":
         char * z_other_fields[10]
         char * z_message
         int z_message_len
-    
+
     ctypedef struct ZSubscription_t:
         char * zsub_recipient
         char * zsub_class
         char * zsub_classinst
-    
+
     int (*ZAUTH)()
     int (*ZNOAUTH)()
-    
+
     int ZInitialize()
     int ZOpenPort(unsigned short * port)
     int ZGetFD()
