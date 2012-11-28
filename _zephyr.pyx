@@ -228,3 +228,27 @@ def sender():
 
 def realm():
     return ZGetRealm()
+
+def getSubscriptions():
+    cdef ZSubscription_t *csubs
+
+    cdef int cnum
+    cnum = 0
+    errno = ZRetrieveSubscriptions(0, &cnum)
+    __error(errno)
+    # save the count as a Python variable since ZGetSubscriptions
+    # mutates its argument
+    num = cnum
+    csubs = <ZSubscription_t*>calloc(num, sizeof(ZSubscription_t))
+    try:
+        errno = ZGetSubscriptions(csubs, &cnum)
+        __error(errno)
+
+        subs = []
+        for i in xrange(num):
+            subs.append((csubs[i].zsub_class, csubs[i].zsub_classinst, csubs[i].zsub_recipient))
+        return subs
+    finally:
+        ZFlushSubscriptions()
+        free(csubs)
+
