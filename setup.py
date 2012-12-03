@@ -16,8 +16,8 @@ setup(
     py_modules=['zephyr'],
     ext_modules=[
         Extension("_zephyr",
-                  ["_zephyr.pyx"],
+                  ["_zephyr.pyx", "pool.c"],
                   libraries=["zephyr"])
         ],
-    cmdclass= {"build_ext": build_ext}
+    cmdclass= {"build_ext": build_ext},
 )

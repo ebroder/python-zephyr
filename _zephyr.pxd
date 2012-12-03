@@ -102,3 +102,12 @@ cdef extern from "stdlib.h":
 cdef extern from "string.h":
     void * memset(void *, int, unsigned int)
 
+cdef extern from "pool.h":
+    ctypedef struct object_pool:
+        void **objects
+        size_t alloc
+        size_t count
+
+    void object_pool_init(object_pool *pool)
+    void object_pool_append(object_pool *pool, object obj)
+    void object_pool_free(object_pool *pool)
