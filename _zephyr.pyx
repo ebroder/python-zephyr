@@ -54,7 +54,7 @@ class ZNotice(object):
         self.recipient = None
         self.sender = None
         self.opcode = None
-        self.format = "Class $class, Instance $instance:\nTo: @bold($recipient) at $time $date\nFrom: @bold{$1 <$sender>}\n\n$2"
+        self.format = "http://zephyr.1ts.org/wiki/df"
         self.other_fields = []
         self.fields = []
 
