@@ -1,8 +1,8 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 from setuptools import setup
 from distutils.extension import Extension
-from Pyrex.Distutils import build_ext
+from Cython.Distutils import build_ext
 
 setup(
     name="PyZephyr",
@@ -12,12 +12,12 @@ setup(
     author_email="broder@mit.edu",
     #url="http://ebroder.net/code/PyZephyr",
     license="MIT",
-    requires=['Pyrex'],
+    requires=['Cython'],
     py_modules=['zephyr'],
     ext_modules=[
         Extension("_zephyr",
-                  ["_zephyr.pyx"],
+                  ["_zephyr.pyx", "pool.c"],
                   libraries=["zephyr"])
         ],
-    cmdclass= {"build_ext": build_ext}
+    cmdclass= {"build_ext": build_ext},
 )
