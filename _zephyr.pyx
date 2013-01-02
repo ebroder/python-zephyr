@@ -13,12 +13,6 @@ cdef object _string_c2p(char * string):
     else:
         return string
 
-cdef char * _string_p2c(object string) except *:
-    if string is None:
-        return NULL
-    else:
-        return string
-
 class ZUid(object):
     """
     A per-transaction unique ID for zephyrs
@@ -28,7 +22,7 @@ class ZUid(object):
         self.address = ''
         self.time = 0
 
-cdef void _ZUid_c2p(ZUnique_Id_t * uid, object p_uid):
+cdef void _ZUid_c2p(ZUnique_Id_t * uid, object p_uid) except *:
     p_uid.address = inet_ntoa(uid.zuid_addr)
     p_uid.time = uid.tv.tv_sec + (uid.tv.tv_usec / 100000.0)
 
@@ -36,6 +30,13 @@ cdef void _ZUid_p2c(object uid, ZUnique_Id_t * c_uid) except *:
     inet_aton(uid.address, &c_uid.zuid_addr)
     c_uid.tv.tv_usec = int(uid.time)
     c_uid.tv.tv_usec = int((uid.time - c_uid.tv.tv_usec) * 100000)
+
+cdef char * _string_p2c(object_pool *pool, object string) except *:
+    if string is None:
+        return NULL
+    else:
+        object_pool_append(pool, string);
+        return string
 
 class ZNotice(object):
     """
@@ -70,22 +71,27 @@ class ZNotice(object):
     message = property(getmessage, setmessage)
 
     def send(self):
+        cdef object_pool pool
         cdef ZNotice_t notice
-        _ZNotice_p2c(self, &notice)
+        try:
+            object_pool_init(&pool)
+            _ZNotice_p2c(self, &notice, &pool)
 
-        original_message = self.message
+            original_message = self.message
 
-        if self.auth:
-            errno = ZSendNotice(&notice, ZAUTH)
-        else:
-            errno = ZSendNotice(&notice, ZNOAUTH)
-        __error(errno)
+            if self.auth:
+                errno = ZSendNotice(&notice, ZAUTH)
+            else:
+                errno = ZSendNotice(&notice, ZNOAUTH)
+            __error(errno)
 
-        _ZNotice_c2p(&notice, self)
+            _ZNotice_c2p(&notice, self)
 
-        self.message = original_message
+            self.message = original_message
 
-        ZFreeNotice(&notice)
+            ZFreeNotice(&notice)
+        finally:
+            object_pool_free(&pool);
 
 cdef void _ZNotice_c2p(ZNotice_t * notice, object p_notice) except *:
     p_notice.kind = notice.z_kind
@@ -109,7 +115,7 @@ cdef void _ZNotice_c2p(ZNotice_t * notice, object p_notice) except *:
     else:
         p_notice.message = PyString_FromStringAndSize(notice.z_message, notice.z_message_len)
 
-cdef void _ZNotice_p2c(object notice, ZNotice_t * c_notice) except *:
+cdef void _ZNotice_p2c(object notice, ZNotice_t * c_notice, object_pool *pool) except *:
     memset(c_notice, 0, sizeof(ZNotice_t))
 
     c_notice.z_kind = notice.kind
@@ -121,22 +127,22 @@ cdef void _ZNotice_p2c(object notice, ZNotice_t * c_notice) except *:
         c_notice.z_port = notice.port
     c_notice.z_auth = int(notice.auth)
 
-    c_notice.z_class = _string_p2c(notice.cls)
-    c_notice.z_class_inst = _string_p2c(notice.instance)
-    c_notice.z_recipient = _string_p2c(notice.recipient)
-    c_notice.z_sender = _string_p2c(notice.sender)
-    c_notice.z_opcode = _string_p2c(notice.opcode)
-    c_notice.z_default_format = _string_p2c(notice.format)
+    c_notice.z_class = _string_p2c(pool, notice.cls)
+    c_notice.z_class_inst = _string_p2c(pool, notice.instance)
+    c_notice.z_recipient = _string_p2c(pool, notice.recipient)
+    c_notice.z_sender = _string_p2c(pool, notice.sender)
+    c_notice.z_opcode = _string_p2c(pool, notice.opcode)
+    c_notice.z_default_format = _string_p2c(pool, notice.format)
     c_notice.z_num_other_fields = len(notice.other_fields)
     for i in range(c_notice.z_num_other_fields):
-        c_notice.z_other_fields[i] = _string_p2c(notice.other_fields[i])
+        c_notice.z_other_fields[i] = _string_p2c(pool, notice.other_fields[i])
 
     if isinstance(notice.message, unicode):
         notice.encoded_message = notice.message.encode('utf-8')
     else:
         notice.encoded_message = notice.message
 
-    c_notice.z_message = _string_p2c(notice.encoded_message)
+    c_notice.z_message = _string_p2c(pool, notice.encoded_message)
     c_notice.z_message_len = len(notice.encoded_message)
 
 def initialize():
@@ -245,7 +251,7 @@ def getSubscriptions():
         __error(errno)
 
         subs = []
-        for i in xrange(num):
+        for i in range(num):
             subs.append((csubs[i].zsub_class, csubs[i].zsub_classinst, csubs[i].zsub_recipient))
         return subs
     finally:
