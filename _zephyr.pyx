@@ -220,13 +220,16 @@ def receive(block=False):
     errno = ZReceiveNotice(&notice, &sender)
     __error(errno)
 
-    if ZCheckAuthentication(&notice, &sender) == ZAUTH_YES:
-        notice.z_auth = 1
-    else:
-        notice.z_auth = 0
+    try:
+        if ZCheckAuthentication(&notice, &sender) == ZAUTH_YES:
+            notice.z_auth = 1
+        else:
+            notice.z_auth = 0
 
-    p_notice = ZNotice()
-    _ZNotice_c2p(&notice, p_notice)
+        p_notice = ZNotice()
+        _ZNotice_c2p(&notice, p_notice)
+    finally:
+        ZFreeNotice(&notice)
     return p_notice
 
 def sender():
