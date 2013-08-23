@@ -238,6 +238,24 @@ def sender():
 def realm():
     return ZGetRealm()
 
+def dump_session():
+    cdef int len
+    cdef char *buffer
+    cdef bytes dump
+
+    errno = ZDumpSession(&buffer, &len)
+    __error(errno)
+    try:
+        dump = buffer[:len]
+    finally:
+        free(buffer)
+    return dump
+
+def load_session(session):
+    cdef char *c_string = session
+    errno = ZLoadSession(c_string, len(session))
+    __error(errno)
+
 def getSubscriptions():
     cdef ZSubscription_t *csubs
 

@@ -87,6 +87,8 @@ cdef extern from "zephyr/zephyr.h":
     int ZRetrieveSubscriptions(unsigned short port, int* nitems)
     int ZGetSubscriptions(ZSubscription_t subslist[], int* nitems)
     int ZFlushSubscriptions()
+    int ZDumpSession(char ** buffer, int *len)
+    int ZLoadSession(char * buffer, int len)
 
 cdef extern from "Python.h":
     object PyString_FromStringAndSize(char *, Py_ssize_t)
