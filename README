@@ -2,14 +2,12 @@
 Installing PyZephyr
 ===================
 
-To install PyZephyr, you will first need to install Pyrex_. It's
-always a good idea to install Pyrex through your package manager, if
-possible. Your system's Pyrex package may be named ``python-pyrex`` or
-``pyrex-py25``. If your package manager doesn't have a package for
-Pyrex, or if you wish to install Pyrex by hand anyway, you can do so
-by running::
+To install PyZephyr, you will first need to install Cython_. It's always a good
+idea to install Cython through your package manager, if possible.  If your
+package manager doesn't have a package for Cython, or if you wish to install
+Cython by hand anyway, you can do so by running::
 
-  $ easy_install Pyrex
+  $ easy_install Cython
 
 Once you've done that, to install PyZephyr globally, run::
 
@@ -33,6 +31,6 @@ build the Debian package of the latest release, run::
 
 You will need the devscripts and git-buildpackage packages installed,
 as well as this package's build dependencies (debhelper,
-python-all-dev, python-central, python, python-pyrex, libzephyr-dev).
+python-all-dev, python-central, python, cython, libzephyr-dev).
 
-.. _Pyrex: http://www.cosc.canterbury.ac.nz/greg.ewing/python/Pyrex/
+.. _Cython: http://www.cython.org/
