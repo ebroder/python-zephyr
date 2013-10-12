@@ -33,6 +33,11 @@ cdef extern from "zephyr/zephyr.h":
         ZAUTH_YES,
         ZAUTH_NO
 
+    enum _ZCharsets:
+        ZCHARSET_UNKNOWN,
+        ZCHARSET_ISO_8859_1,
+        ZCHARSET_UTF_8
+
     ctypedef struct ZUnique_Id_t:
         in_addr zuid_addr
         timeval tv
@@ -44,6 +49,7 @@ cdef extern from "zephyr/zephyr.h":
         ZUnique_Id_t z_uid
         timeval z_time
         unsigned short z_port
+        unsigned short z_charset
         int z_auth
         int z_checked_auth
         int z_authent_len

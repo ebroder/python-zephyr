@@ -139,11 +139,14 @@ cdef void _ZNotice_p2c(object notice, ZNotice_t * c_notice, object_pool *pool) e
 
     if isinstance(notice.message, unicode):
         notice.encoded_message = notice.message.encode('utf-8')
+        charset = ZCHARSET_UTF_8
     else:
         notice.encoded_message = notice.message
+        charset = ZCHARSET_UNKNOWN
 
     c_notice.z_message = _string_p2c(pool, notice.encoded_message)
     c_notice.z_message_len = len(notice.encoded_message)
+    c_notice.z_charset = charset
 
 def initialize():
     errno = ZInitialize()
