@@ -58,6 +58,7 @@ class ZNotice(object):
         self.format = "http://zephyr.1ts.org/wiki/df"
         self.other_fields = []
         self.fields = []
+        self._charset = None
 
         for k, v in options.iteritems():
             setattr(self, k, v)
@@ -69,6 +70,10 @@ class ZNotice(object):
         self.fields = newmsg.split('\0')
 
     message = property(getmessage, setmessage)
+
+    @property
+    def charset(self):
+        return self._charset
 
     def send(self):
         cdef object_pool pool
@@ -114,6 +119,8 @@ cdef void _ZNotice_c2p(ZNotice_t * notice, object p_notice) except *:
         p_notice.message = None
     else:
         p_notice.message = PyString_FromStringAndSize(notice.z_message, notice.z_message_len)
+
+    p_notice._charset = ZCharsetToString(notice.z_charset)
 
 cdef void _ZNotice_p2c(object notice, ZNotice_t * c_notice, object_pool *pool) except *:
     memset(c_notice, 0, sizeof(ZNotice_t))
