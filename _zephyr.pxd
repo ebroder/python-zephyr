@@ -33,6 +33,11 @@ cdef extern from "zephyr/zephyr.h":
         ZAUTH_YES,
         ZAUTH_NO
 
+    enum _ZCharsets:
+        ZCHARSET_UNKNOWN,
+        ZCHARSET_ISO_8859_1,
+        ZCHARSET_UTF_8
+
     ctypedef struct ZUnique_Id_t:
         in_addr zuid_addr
         timeval tv
@@ -44,6 +49,7 @@ cdef extern from "zephyr/zephyr.h":
         ZUnique_Id_t z_uid
         timeval z_time
         unsigned short z_port
+        unsigned short z_charset
         int z_auth
         int z_checked_auth
         int z_authent_len
@@ -87,6 +93,14 @@ cdef extern from "zephyr/zephyr.h":
     int ZRetrieveSubscriptions(unsigned short port, int* nitems)
     int ZGetSubscriptions(ZSubscription_t subslist[], int* nitems)
     int ZFlushSubscriptions()
+
+    # XXX: This should really be const char * (or const_char *) -- see
+    # <http://docs.cython.org/src/tutorial/strings.html#dealing-with-const>
+    # In Cython 0.12, Cython doesn't seem to support const_char at all, and
+    # in Cython 0.15, it doesn't seem to be able to handle converting a
+    # const_char * to a Python string. Once we're dealing with newer Cythons,
+    # this should probably change, though.
+    char *ZCharsetToString(unsigned short charset)
 
 cdef extern from "Python.h":
     object PyString_FromStringAndSize(char *, Py_ssize_t)
