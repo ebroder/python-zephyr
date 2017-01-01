@@ -144,6 +144,7 @@ cdef void _ZNotice_p2c(object notice, ZNotice_t * c_notice, object_pool *pool) e
     for i in range(c_notice.z_num_other_fields):
         c_notice.z_other_fields[i] = _string_p2c(pool, notice.other_fields[i])
 
+    cdef unsigned short charset
     if isinstance(notice.message, unicode):
         notice.encoded_message = notice.message.encode('utf-8')
         charset = ZCHARSET_UTF_8
