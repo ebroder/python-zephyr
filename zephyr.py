@@ -1,9 +1,12 @@
 import _zephyr as _z
 import os
+import sys
 
 from _zephyr import receive, ZNotice
 
 __inited = False
+
+is_py3 = sys.version_info.major >= 3
 
 def init():
     global __inited
@@ -12,6 +15,9 @@ def init():
         _z.openPort()
         _z.cancelSubs()
         __inited = True
+
+def realm():
+    return _z.realm().decode('utf-8')
 
 class Subscriptions(set):
     """
@@ -29,7 +35,6 @@ class Subscriptions(set):
 
     def __del__(self):
         _z.cancelSubs()
-        super(Subscriptions, self).__del__()
 
     def _fixTuple(self, item):
         if len(item) != 3:
@@ -40,8 +45,11 @@ class Subscriptions(set):
             item[2] = item[2][1:]
 
         if '@' not in item[2]:
-            item[2] += '@%s' % _z.realm()
+            item[2] += '@%s' % realm()
 
+        if is_py3:
+            item = [bytes(i, "utf-8") for i in item]
+        print(item)
         return tuple(item)
 
     def add(self, item):

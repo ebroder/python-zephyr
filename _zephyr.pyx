@@ -187,24 +187,6 @@ def sub(cls, instance, recipient):
     errno = ZSubscribeTo(newsub, 1, 0)
     __error(errno)
 
-def subAll(lst):
-    cdef ZSubscription_t *newsubs
-    cdef unsigned int i
-
-    newsubs = <ZSubscription_t*>calloc(len(lst), sizeof(ZSubscription_t))
-    try:
-        for 0 <= i < len(lst):
-            newsubs[i].zsub_class = lst[i][0]
-            newsubs[i].zsub_classinst = lst[i][1]
-            newsubs[i].zsub_recipient = lst[i][2]
-
-        errno = ZSubscribeTo(newsubs, len(lst), 0)
-        __error(errno)
-    finally:
-        if newsubs:
-            free(newsubs);
-    pass
-
 def unsub(cls, instance, recipient):
     cdef ZSubscription_t delsub[1]
 
