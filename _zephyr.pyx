@@ -118,7 +118,7 @@ cdef void _ZNotice_c2p(ZNotice_t * notice, object p_notice) except *:
     if notice.z_message is NULL:
         p_notice.message = None
     else:
-        p_notice.message = PyString_FromStringAndSize(notice.z_message, notice.z_message_len)
+        p_notice.message = PyBytes_FromStringAndSize(notice.z_message, notice.z_message_len)
 
     p_notice._charset = ZCharsetToString(notice.z_charset)
 

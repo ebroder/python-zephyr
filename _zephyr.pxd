@@ -103,7 +103,7 @@ cdef extern from "zephyr/zephyr.h":
     char *ZCharsetToString(unsigned short charset)
 
 cdef extern from "Python.h":
-    object PyString_FromStringAndSize(char *, Py_ssize_t)
+    object PyBytes_FromStringAndSize(char *, Py_ssize_t)
 
 cdef extern from "com_err.h":
     char * error_message(int)
