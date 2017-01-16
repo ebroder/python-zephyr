@@ -33,7 +33,7 @@ class Subscriptions(set):
 
     def _fixTuple(self, item):
         if len(item) != 3:
-            raise TypeError, 'item is not a zephyr subscription tuple'
+            raise TypeError('item is not a zephyr subscription tuple')
 
         item = list(item)
         if item[2].startswith('*'):
@@ -58,7 +58,7 @@ class Subscriptions(set):
         item = self._fixTuple(item)
 
         if item not in self:
-            raise KeyError, item
+            raise KeyError(item)
 
         _z.unsub(*item)
 
