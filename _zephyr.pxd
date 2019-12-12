@@ -1,3 +1,5 @@
+# cython: c_string_type=unicode, c_string_encoding=ascii
+
 cdef extern from "netinet/in.h":
     struct in_addr:
         int s_addr
@@ -101,9 +103,6 @@ cdef extern from "zephyr/zephyr.h":
     # const_char * to a Python string. Once we're dealing with newer Cythons,
     # this should probably change, though.
     char *ZCharsetToString(unsigned short charset)
-
-cdef extern from "Python.h":
-    object PyString_FromStringAndSize(char *, Py_ssize_t)
 
 cdef extern from "com_err.h":
     char * error_message(int)

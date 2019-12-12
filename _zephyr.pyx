@@ -1,3 +1,5 @@
+# cython: c_string_type=unicode, c_string_encoding=ascii
+
 import os
 import pwd
 import time
@@ -115,12 +117,21 @@ cdef void _ZNotice_c2p(ZNotice_t * notice, object p_notice) except *:
     for i in range(notice.z_num_other_fields):
         p_notice.other_fields.append(notice.z_other_fields[i])
 
+    p_notice._charset = ZCharsetToString(notice.z_charset)
+
     if notice.z_message is NULL:
+        p_notice.encoded_message = None
         p_notice.message = None
     else:
-        p_notice.message = PyString_FromStringAndSize(notice.z_message, notice.z_message_len)
+        p_notice.encoded_message = <bytes>notice.z_message[:notice.z_message_len]
 
-    p_notice._charset = ZCharsetToString(notice.z_charset)
+        if notice.z_charset == ZCHARSET_UTF_8:
+            p_notice.message = p_notice.encoded_message.decode('utf-8', 'replace')
+        elif notice.z_charset == ZCHARSET_ISO_8859_1:
+            p_notice.message = p_notice.encoded_message.decode('iso-8859-1', 'replace')
+        else:
+            # We don't know what the encoding is, so we have to drop unknown characters.
+            p_notice.message = p_notice.encoded_message.decode('ascii', 'replace')
 
 cdef void _ZNotice_p2c(object notice, ZNotice_t * c_notice, object_pool *pool) except *:
     memset(c_notice, 0, sizeof(ZNotice_t))
