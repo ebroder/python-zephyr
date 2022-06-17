@@ -27,13 +27,13 @@ class ZUid(object):
 
 cdef void _ZUid_c2p(ZUnique_Id_t * uid, object p_uid) except *:
     p_uid.address = inet_ntoa(uid.zuid_addr)
-    p_uid.time = socket.ntohl(uid.tv.tv_sec) + (socket.ntohl(uid.tv.tv_usec) / 100000.0)
+    p_uid.time = socket.ntohl(uid.tv.tv_sec) + (socket.ntohl(uid.tv.tv_usec) / 1e6)
 
 cdef void _ZUid_p2c(object uid, ZUnique_Id_t * c_uid) except *:
     inet_aton(uid.address, &c_uid.zuid_addr)
     seconds = int(uid.time)
     c_uid.tv.tv_sec = socket.htonl(seconds)
-    c_uid.tv.tv_usec = socket.htonl(int((uid.time - seconds) * 100000))
+    c_uid.tv.tv_usec = socket.htonl(int((uid.time - seconds) * 1e6))
 
 cdef char * _string_p2c(object_pool *pool, object string) except *:
     if string is None:
@@ -105,7 +105,7 @@ class ZNotice(object):
 cdef void _ZNotice_c2p(ZNotice_t * notice, object p_notice) except *:
     p_notice.kind = notice.z_kind
     _ZUid_c2p(&notice.z_uid, p_notice.uid)
-    p_notice.time = notice.z_time.tv_sec + (notice.z_time.tv_usec / 100000.0)
+    p_notice.time = notice.z_time.tv_sec + (notice.z_time.tv_usec / 1e6)
     p_notice.port = int(notice.z_port)
     p_notice.auth = bool(notice.z_auth)
 
@@ -142,7 +142,7 @@ cdef void _ZNotice_p2c(object notice, ZNotice_t * c_notice, object_pool *pool) e
     _ZUid_p2c(notice.uid, &c_notice.z_uid)
     if notice.time != 0:
         c_notice.z_time.tv_sec = int(notice.time)
-        c_notice.z_time.tv_usec = int((notice.time - c_notice.z_time.tv_sec) * 100000)
+        c_notice.z_time.tv_usec = int((notice.time - c_notice.z_time.tv_sec) * 1e6)
     if notice.port != 0:
         c_notice.z_port = notice.port
     c_notice.z_auth = int(notice.auth)
